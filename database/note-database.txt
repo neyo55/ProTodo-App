@@ -17,3 +17,10 @@ CREATE USER 'protodo_user'@'localhost' IDENTIFIED BY 'computer123';
 -- Grant permissions
 GRANT ALL PRIVILEGES ON protodo_db.* TO 'protodo_user'@'localhost';
 FLUSH PRIVILEGES;
+EXIT;
+
+
+
+
+# Command to login to the root user in MySQL on ubuntu server
+sudo mysql -u root -ppassword

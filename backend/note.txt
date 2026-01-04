@@ -16,6 +16,31 @@ python app.py
 
 
 
+################# All this is needed to run on Ubuntu server ##############
+# Command to install python3 virtual environment if not installed already
+sudo apt install python3-venv
+
+# Command to create a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Creating it using Todo as the virtual environment
+python3 -m venv todo
+source todo/bin/activate
+
+# Command to install requirements and gunicorn as it is production grade not 'python app.py' we run on local server
+pip install -r requirements.txt
+pip install gunicorn
+
+# Re-create the .env file that was ignored by Git
+nano .env
+
+#####################################################################
+
+
+
+
+
 ############# Observation and Complaint #############
 I noticed the time different ( I picked 17:55 on the frontend and when i got email it mentioned 16:55)
 I want to add more details to the UI (Make it more robust/production standard)
