@@ -1,0 +1,8 @@
+backend/
+├── app.py                  # Main Flask app
+├── models.py               # Database models (SQLAlchemy)
+├── auth.py                 # Authentication routes
+├── todos.py                # Todo routes
+├── config.py               # Configuration
+├── requirements.txt        # Python dependencies
+└── .env                    # Environment variables (local)

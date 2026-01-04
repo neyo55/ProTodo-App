@@ -1,0 +1,19 @@
+# To install a translator to talk to MySQL (pymysql) or (mysqlclient)
+pip install pymysql cryptography
+
+
+# Login to MySQL 
+mysql -u root -p
+
+
+# Create a database
+
+-- Create the database
+CREATE DATABASE protodo_db;
+
+-- Create a dedicated user (optional if you already have one)
+CREATE USER 'protodo_user'@'localhost' IDENTIFIED BY 'computer123';
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON protodo_db.* TO 'protodo_user'@'localhost';
+FLUSH PRIVILEGES;

@@ -1,0 +1,8 @@
+frontend/
+├── login.html              # 
+├── signup.html             # 
+├── app.html                # 
+├── style.css               # 
+├── script.js               # 
+├──                         # 
+└──                         # 

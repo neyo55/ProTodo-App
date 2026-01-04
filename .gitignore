@@ -1,0 +1,18 @@
+# Ignore Environment Variables (Security Risk!)
+.env
+backend/.env
+
+# Ignore Python Cache and Virtual Envs
+__pycache__/
+*.pyc
+venv/
+env/
+instance/
+
+# Ignore OS junk files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE settings
+.vscode/
+.idea/

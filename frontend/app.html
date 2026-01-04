@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTodo - Your Tasks</title>
+    <!-- Push Notifications Manifest & Icons (optional but recommended) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-mode">
+    <div class="app-wrapper">  <!-- NEW: Centered container -->
+        <header class="app-header">
+            <h1>ProTodo</h1>
+            <div class="header-actions">
+                <input type="text" id="search-input" placeholder="Search todos...">
+                <button id="dark-mode-toggle" title="Toggle dark mode">🌙</button>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button data-view="todos" class="active">Todos</button>
+            <button data-view="dashboard">Dashboard</button>
+        </nav>
+
+        <!-- Todos View -->
+        <div id="todos-view">
+            <div class="add-todo-form">
+                <input type="text" id="todo-title" placeholder="What needs to be done?" required>
+                <input type="datetime-local" id="todo-due">
+                <select id="todo-priority">
+                    <option value="low">Low Priority</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+                <select id="todo-category">
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="health">Health</option>
+                    <option value="other">Other</option>
+                </select>
+                <input type="text" id="todo-tags" placeholder="Tags (e.g. urgent, family)">
+                <textarea id="todo-notes" placeholder="Short notes..."></textarea>
+                <button id="add-todo-btn">Add Todo</button>
+            </div>
+
+            <div class="controls">
+                <select id="filter-category"><option value="all">All Categories</option></select>
+                <select id="sort-by">
+                    <option value="due">Due Date</option>
+                    <option value="priority">Priority</option>
+                    <option value="created">Created</option>
+                </select>
+                <button id="export-btn">Export ↓</button>
+                <button id="import-btn">Import ↑</button>
+            </div>
+
+            <ul id="todo-list"></ul>
+            <div id="empty-state" class="empty-state hidden">No todos yet. Create one!</div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="hidden">
+            <h2>Analytics Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat">Total: <span id="stat-total">0</span></div>
+                <div class="stat">Completed: <span id="stat-completed">0</span></div>
+                <div class="stat">Overdue: <span id="stat-overdue">0</span></div>
+                <div class="stat">Rate: <span id="stat-rate">0%</span></div>
+            </div>
+            <canvas id="category-chart" width="300" height="300"></canvas>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Temporarily disable auth check for testing
+        // Remove or comment this when backend is ready
+        // localStorage.setItem('token', 'temp');  // Uncomment if needed
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initAppPage();
+        });
+    </script>
+</body>
+</html>

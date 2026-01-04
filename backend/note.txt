@@ -1,0 +1,31 @@
+
+# Step to run the app locally 
+
+# Step 1
+
+# install requirements
+pip install -r requirements.txt
+
+# To upgrade pip to new version
+python.exe -m pip install --upgrade pip
+
+# Step 2
+
+cd backend
+python app.py
+
+
+
+############# Observation and Complaint #############
+I noticed the time different ( I picked 17:55 on the frontend and when i got email it mentioned 16:55)
+I want to add more details to the UI (Make it more robust/production standard)
+I want to add email notification option of 30mins or 60mins before due time so the user can be prepared
+I also think of adding SMS alert (optional)
+I also want to add delete all todo or delete as disered by the user i.e option to mark all, delete selected todo
+I also want to add copy right below the page, contact us, live chat with support
+the rendering should be for all devices, mobile, tablet, laptop. et.c all screen sizes.
+
+
+
+
+
