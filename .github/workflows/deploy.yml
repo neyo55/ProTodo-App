@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # Only deploy when code hits the Production branch
+      - main
 
 jobs:
   deploy:
@@ -16,23 +16,52 @@ jobs:
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.EC2_HOST }}        # Your AWS IP
-        username: ${{ secrets.EC2_USER }}    # ubuntu
-        key: ${{ secrets.EC2_KEY }}          # Your private key content
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
         script: |
-          # 1. Go to the project folder
+          # --- ERROR HANDLING ---
+          # Exit immediately if a command exits with a non-zero status
+          set -e
+          set -o pipefail
+
+          echo "🚀 Starting Deployment..."
+
+          # 1. Update Code
+          echo "⬇️ Pulling latest code..."
           cd ~/ProTodo-App
+          git fetch origin main
+          # Force sync: This ensures server matches GitHub exactly (safest for automated deploys)
+          git reset --hard origin/main  
+
+          # 2. Update Configurations (Idempotent: Always forces correct state)
+          echo "⚙️ Updating configurations..."
+          # Copy service file
+          sudo cp deployment/protodo.service /etc/systemd/system/protodo.service
+          sudo systemctl daemon-reload
           
-          # 2. Pull the latest code
-          git pull origin main
+          # Copy Nginx file
+          sudo cp deployment/nginx_protodo /etc/nginx/sites-available/protodo
+          # Ensure symlink exists (force creation)
+          sudo ln -sf /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
           
-          # 3. Update dependencies (just in case)
+          # CRITICAL: Test Nginx config before reloading. 
+          # If this fails, the script stops here, saving the site from crashing.
+          echo "🧪 Testing Nginx config..."
+          sudo nginx -t
+
+          # 3. Install Dependencies
+          echo "📦 Installing dependencies..."
           cd backend
+          # Create venv if it somehow got deleted
+          if [ ! -d "todo" ]; then python3 -m venv todo; fi
           source todo/bin/activate
+          # Pip automatically skips installed packages (Efficient)
           pip install -r requirements.txt
-          
-          # 4. Restart the service to apply changes
+
+          # 4. Restart Services
+          echo "cw Restarting Application..."
           sudo systemctl restart protodo
-          
-          # 5. Reload Nginx (optional, mostly for static file updates)
           sudo systemctl reload nginx
+
+          echo "✅ Deployment Complete!"
