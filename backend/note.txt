@@ -122,6 +122,10 @@ sudo tail -n 20 /var/log/nginx/error.log
 
 #####################################################################
 
+# To use SCP copy command to copy files from my local system to the server 
+scp -i <key> -r <folder_to_copy> <user>@<ip>:<destination>
+scp -i protodo-key -r ~/Desktop/backend ubuntu@3.253.86.104:/home/ubuntu/
+
 
 
 

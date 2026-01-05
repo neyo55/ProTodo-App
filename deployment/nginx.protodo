@@ -1,0 +1,16 @@
+server {
+    listen 80;
+    server_name _;
+
+    root /home/ubuntu/ProTodo-App/frontend;
+
+    location / {
+        index login.html;
+        try_files $uri $uri/ /login.html;
+    }
+
+    location /api {
+        include proxy_params;
+        proxy_pass http://127.0.0.1:5000;
+    }
+}
