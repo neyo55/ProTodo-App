@@ -1,10 +1,10 @@
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
-Flask-Cors==4.0.1
+Flask-Cors==5.0.0         # Updated from 4.0.1 (Fixes Security Issues)
 Flask-JWT-Extended==4.6.0
 python-dotenv==1.0.1
 bcrypt==4.2.0
 Flask-APScheduler==1.13.1
 pymysql==1.1.1
-cryptography==41.0.3
-gunicorn==21.2.0
+cryptography==43.0.3      # Updated from 41.0.3 (Fixes Security Issues)
+gunicorn==23.0.0          # Updated from 21.2.0 (Fixes HTTP Smuggling)
