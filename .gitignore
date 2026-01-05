@@ -15,4 +15,4 @@ Thumbs.db
 
 # Ignore IDE settings
 .vscode/
-.idea/
+.idea/protodo-key.pub protodo-key

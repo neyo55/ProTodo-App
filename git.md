@@ -232,3 +232,17 @@ If you ever want to finish the "Professional Look," the final steps would be:
 3. **Get Free SSL:** Run one command on your server (`sudo certbot --nginx`) to get the green lock icon 🔒 automatically.
 
 **Would you like to wrap up the project here as Version 1.0, or do you want to set up a domain name now?**
+
+
+# To Delete file from git 
+
+
+# 1. Stop tracking the file (keeps it on your laptop, removes it from GitHub)
+git rm --cached protodo-key.pem
+
+# 2. Add it to .gitignore so you don't push it again by mistake
+echo "protodo-key.pem" >> .gitignore
+
+# 3. Verify it's ignored
+cat .gitignore
+# (You should see your key file at the bottom)
