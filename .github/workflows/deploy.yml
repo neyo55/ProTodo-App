@@ -1,4 +1,4 @@
-name: Deploy to AWS EC2
+name: Production CI/CD Pipeline
 
 on:
   push:
@@ -6,7 +6,45 @@ on:
       - main
 
 jobs:
+  # JOB 1: Continuous Integration (Security & Quality Checks)
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 bandit safety
+          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+
+      - name: 🔍 Lint with Flake8 (Check Syntax)
+        # Stop the build if there are Python syntax errors or undefined names
+        run: |
+          # E9,F63,F7,F82 = Syntax errors
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Warning for style (won't stop build, just warns)
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: 🛡️ Security Scan (Bandit)
+        # Checks for common security issues in Python code
+        run: |
+          bandit -r backend/ -ll -ii
+
+      - name: 📦 Check Dependencies (Safety)
+        # Checks if installed packages have known security vulnerabilities
+        run: |
+          safety check
+
+  # JOB 2: Continuous Deployment (Only runs if Job 1 succeeds)
   deploy:
+    needs: build-and-test  # <--- This is the Gatekeeper
     runs-on: ubuntu-latest
     
     steps:
@@ -20,48 +58,107 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          # --- ERROR HANDLING ---
-          # Exit immediately if a command exits with a non-zero status
           set -e
           set -o pipefail
-
+          
           echo "🚀 Starting Deployment..."
-
+          
           # 1. Update Code
-          echo "⬇️ Pulling latest code..."
           cd ~/ProTodo-App
           git fetch origin main
-          # Force sync: This ensures server matches GitHub exactly (safest for automated deploys)
-          git reset --hard origin/main  
+          git reset --hard origin/main
 
-          # 2. Update Configurations (Idempotent: Always forces correct state)
+          # 2. Update Configurations
           echo "⚙️ Updating configurations..."
-          # Copy service file
           sudo cp deployment/protodo.service /etc/systemd/system/protodo.service
           sudo systemctl daemon-reload
-          
-          # Copy Nginx file
           sudo cp deployment/nginx_protodo /etc/nginx/sites-available/protodo
-          # Ensure symlink exists (force creation)
           sudo ln -sf /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
-          
-          # CRITICAL: Test Nginx config before reloading. 
-          # If this fails, the script stops here, saving the site from crashing.
-          echo "🧪 Testing Nginx config..."
           sudo nginx -t
 
           # 3. Install Dependencies
           echo "📦 Installing dependencies..."
           cd backend
-          # Create venv if it somehow got deleted
           if [ ! -d "todo" ]; then python3 -m venv todo; fi
           source todo/bin/activate
-          # Pip automatically skips installed packages (Efficient)
           pip install -r requirements.txt
 
           # 4. Restart Services
           echo "cw Restarting Application..."
           sudo systemctl restart protodo
           sudo systemctl reload nginx
+          
+          echo "✅ Production Deployment Complete!"
 
-          echo "✅ Deployment Complete!"
+
+
+
+
+
+# name: Deploy to AWS EC2
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+    
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v3
+
+#     - name: Deploy to EC2 via SSH
+#       uses: appleboy/ssh-action@master
+#       with:
+#         host: ${{ secrets.EC2_HOST }}
+#         username: ${{ secrets.EC2_USER }}
+#         key: ${{ secrets.EC2_KEY }}
+#         script: |
+#           # --- ERROR HANDLING ---
+#           # Exit immediately if a command exits with a non-zero status
+#           set -e
+#           set -o pipefail
+
+#           echo "🚀 Starting Deployment..."
+
+#           # 1. Update Code
+#           echo "⬇️ Pulling latest code..."
+#           cd ~/ProTodo-App
+#           git fetch origin main
+#           # Force sync: This ensures server matches GitHub exactly (safest for automated deploys)
+#           git reset --hard origin/main  
+
+#           # 2. Update Configurations (Idempotent: Always forces correct state)
+#           echo "⚙️ Updating configurations..."
+#           # Copy service file
+#           sudo cp deployment/protodo.service /etc/systemd/system/protodo.service
+#           sudo systemctl daemon-reload
+          
+#           # Copy Nginx file
+#           sudo cp deployment/nginx_protodo /etc/nginx/sites-available/protodo
+#           # Ensure symlink exists (force creation)
+#           sudo ln -sf /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
+          
+#           # CRITICAL: Test Nginx config before reloading. 
+#           # If this fails, the script stops here, saving the site from crashing.
+#           echo "🧪 Testing Nginx config..."
+#           sudo nginx -t
+
+#           # 3. Install Dependencies
+#           echo "📦 Installing dependencies..."
+#           cd backend
+#           # Create venv if it somehow got deleted
+#           if [ ! -d "todo" ]; then python3 -m venv todo; fi
+#           source todo/bin/activate
+#           # Pip automatically skips installed packages (Efficient)
+#           pip install -r requirements.txt
+
+#           # 4. Restart Services
+#           echo "cw Restarting Application..."
+#           sudo systemctl restart protodo
+#           sudo systemctl reload nginx
+
+#           echo "✅ Deployment Complete!"
