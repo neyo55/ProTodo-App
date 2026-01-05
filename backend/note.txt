@@ -28,12 +28,97 @@ source venv/bin/activate
 python3 -m venv todo
 source todo/bin/activate
 
+# Command to deactivate the virtual environment
+deactivate
+
 # Command to install requirements and gunicorn as it is production grade not 'python app.py' we run on local server
 pip install -r requirements.txt
 pip install gunicorn
 
 # Re-create the .env file that was ignored by Git
 nano .env
+
+# Command to create a systemd service file 
+sudo nano /etc/systemd/system/protodo.service
+
+# The systemd service file #########################
+[Unit]
+Description=Gunicorn instance to serve ProTodo
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/ProTodo-App/backend
+# FIXED: Changed 'venv' to 'todo' in the next two lines as todo is the virtual env name not venv#####
+Environment="PATH=/home/ubuntu/ProTodo-App/backend/todo/bin"
+EnvironmentFile=/home/ubuntu/ProTodo-App/backend/.env
+ExecStart=/home/ubuntu/ProTodo-App/backend/todo/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 app:app
+# ExecStart=/home/ubuntu/ProTodo-App/backend/todo/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+
+#### End of the service file ##########
+
+# Command to Start and Enable the Service 
+sudo systemctl start protodo
+sudo systemctl enable protodo
+
+# 1. Refresh Systemd configuration
+sudo systemctl daemon-reload
+
+# 2. Restart the ProTodo service
+sudo systemctl restart protodo
+
+# 3. Check the status (Look for the green dot!)
+sudo systemctl status protodo
+
+# Command to remove the default Nginx page 
+sudo rm /etc/nginx/sites-enabled/default
+
+# Command to edit Nginx 
+sudo nano /etc/nginx/sites-available/protodo
+
+# This command Link your new site (overwrites if broken)
+sudo ln -sf /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
+
+# Command to Check for typos
+sudo nginx -t
+# (It should say "syntax is ok")
+
+# Command to Restart Nginx
+sudo systemctl restart nginx
+
+# This command changes to the app IP and works even the ip of AWS changes
+server {
+    listen 80;
+    server_name _;
+
+    # 1. SERVE FRONTEND (HTML/CSS/JS)
+    location / {
+        root /home/ubuntu/ProTodo-App/frontend;
+        index index.html; #### Remember to change index.html to the first of your html (login.html) so Nginx can take note 
+        try_files $uri $uri/ /login.html;
+    }
+
+    # 2. PROXY BACKEND (API Requests)
+    location /api {
+        include proxy_params;
+        proxy_pass http://127.0.0.1:5000;
+    }
+}
+
+##################################################
+
+# Solution to Nginx (500 Internal Server Error) it is usually permission issues 
+# Allow everyone (including Nginx) to "peek" inside your home folders
+chmod 755 /home/ubuntu
+chmod 755 /home/ubuntu/ProTodo-App
+chmod 755 /home/ubuntu/ProTodo-App/frontend
+
+# Command to view Nginx error log
+sudo tail -n 20 /var/log/nginx/error.log
 
 #####################################################################
 

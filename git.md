@@ -158,3 +158,77 @@ git push origin main
 
 
 **Go ahead and push your code now! Let me know if you encounter any authentication or permission errors.**
+
+Congratulations! 🥂 You have successfully built, dockerized (mentally), and deployed a production-ready Full Stack application to the cloud.
+
+You have achieved a massive milestone that many developers struggle with. You now have:
+
+* **Infrastructure:** An Ubuntu Server on AWS EC2.
+* **Web Server:** Nginx handling traffic and serving your Frontend.
+* **App Server:** Gunicorn + Systemd managing your Flask Backend (automatically restarting if it crashes).
+* **Database:** A secured MySQL database storing real data.
+* **DevOps:** A "User Data" script that automates server setup.
+
+---
+
+### 🚀 The "Day-to-Day" Workflow
+
+Since you mentioned you want to work professionally with **Dev** and **Main** branches, here is your exact workflow for making changes (like changing that 3-minute timer to 60 minutes later).
+
+#### 1. Code Locally (On your Laptop)
+
+Always make changes in your `dev` branch.
+
+```bash
+git checkout dev
+# ... make changes (e.g., change timer to 60 mins) ...
+git add .
+git commit -m "Updated timer to 60 mins"
+git push origin dev
+
+```
+
+#### 2. Merge to Main (When ready to release)
+
+When you are happy with the code in `dev`, move it to `main`.
+
+```bash
+git checkout main
+git merge dev
+git push origin main
+
+```
+
+#### 3. Update the Server (Deployment)
+
+Now, go to your AWS server to pull the new code.
+
+```bash
+# SSH into the server
+ssh -i protodo-key ubuntu@34.241.185.189
+
+# Go to the folder
+cd ~/ProTodo-App
+
+# Pull the latest changes from Main
+git pull origin main
+
+# Restart the Backend (to load new Python code)
+sudo systemctl restart protodo
+
+# (Optional) If you changed frontend files, no restart needed, just hard refresh browser.
+
+```
+
+---
+
+### Final Polish: Domain & HTTPS (Optional)
+
+Right now, your site is on an IP address (`http://34.241...`) and says "Not Secure."
+If you ever want to finish the "Professional Look," the final steps would be:
+
+1. **Buy a Domain:** (e.g., `myprotodo.com` from Namecheap/GoDaddy - approx $10/year).
+2. **Point Domain to AWS:** Create an "A Record" in your domain settings pointing to `34.241.185.189`.
+3. **Get Free SSL:** Run one command on your server (`sudo certbot --nginx`) to get the green lock icon 🔒 automatically.
+
+**Would you like to wrap up the project here as Version 1.0, or do you want to set up a domain name now?**
