@@ -4,8 +4,8 @@
 
 // === API CONFIGURATION ===
 // CRITICAL: Must match backend exactly — no trailing slash
-const API_BASE = 'http://127.0.0.1:5000/api';  // When testing locally on my laptop
-// const API_BASE = '/api'; // Relative path works for Nginx 
+// const API_BASE = 'http://127.0.0.1:5000/api';  // When testing locally on my laptop
+const API_BASE = '/api'; // Relative path works for Nginx 
 
 let todos = [];                    // In-memory todo list
 let currentView = 'todos';         // Current tab
