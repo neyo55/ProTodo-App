@@ -1,6 +1,6 @@
 # app.py
-# ProTodo Backend v1.0 (Production Stable)
-# Features: JWT Auth, 3-Minute Reminder Window, Crash-Resistant Scheduler
+# ProTodo Backend v1.2 (Production Stable)
+# Features: JWT Auth, Timezone-Aware Reminders, Crash-Resistant Scheduler
 
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -18,8 +18,8 @@ def create_app():
     app.config.from_object(Config)
 
     # === CORS CONFIGURATION ===
-    # Allows the frontend (running on a different port/domain) to talk to this backend
-    # supports_credentials=True is required for sending cookies/auth headers
+    # Allows the frontend (running on a different port/domain) to talk to this backend.
+    # supports_credentials=True is required for sending cookies/auth headers.
     CORS(app, origins=["*"], supports_credentials=True)
 
     # === DATABASE INITIALIZATION ===
@@ -51,7 +51,7 @@ def create_app():
 
     @app.route('/')
     def home():
-        return "ProTodo Backend v1.1 Running!"
+        return "ProTodo Backend v1.2 Running!"
 
     # === BACKGROUND SCHEDULER: EMAIL REMINDERS ===
     # This runs in the background to check for tasks due soon.
@@ -89,13 +89,20 @@ def create_app():
                 if not user or not user.email:
                     continue
 
+                # === TIMEZONE FIX ===
+                # The database stores time in UTC (e.g., 23:10).
+                # We must convert it to the Server's Local Time (WAT) before printing in the email.
+                # 1. .replace(tzinfo=timezone.utc): Tell Python "This timestamp is definitely UTC"
+                # 2. .astimezone(): Convert it to the system's local timezone (Africa/Lagos)
+                local_due_date = todo.due_date.replace(tzinfo=timezone.utc).astimezone()
+
                 print(f"📧 Sending reminder for '{todo.title}' to {user.email}...")
                 
                 # Send the email using mailer.py logic
                 success = send_reminder_email(
                     to_email=user.email,
                     todo_title=todo.title,
-                    due_date_str=todo.due_date.strftime('%Y-%m-%d %H:%M')
+                    due_date_str=local_due_date.strftime('%Y-%m-%d %H:%M')
                 )
 
                 # 4. Mark as sent so we don't spam the user every minute
