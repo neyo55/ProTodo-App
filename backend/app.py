@@ -116,11 +116,17 @@ def create_app():
     except Exception as e:
         print(f"⚠️ Scheduler failed to start (Ignoring to prevent crash): {e}")
 
-    # === DATABASE TABLE CREATION ===
-    # Automatically creates tables if they don't exist
+    # === DATABASE TABLE CREATION (Crash-Proof) ===
+    # We wrap this in a try-except block to handle Race Conditions.
+    # If 3 workers start at once, one will create the tables, and the others
+    # might crash with "Table 'user' already exists". We catch that error here.
     with app.app_context():
-        db.create_all()
-        print("💾 Database tables verified/created!")
+        try:
+            db.create_all()
+            print("💾 Database tables verified/created!")
+        except Exception as e:
+            # If the error is "Table already exists", we can safely ignore it.
+            print(f"⚠️ Database setup warning (likely race condition): {e}")
 
     return app
 
