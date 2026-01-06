@@ -6,9 +6,9 @@ After=network.target
 User=ubuntu
 Group=www-data
 WorkingDirectory=/home/ubuntu/ProTodo-App/backend
-Environment="PATH=/home/ubuntu/ProTodo-App/backend/todo/bin"
+Environment="PATH=/home/ubuntu/ProTodo-App/backend/protodo/bin"
 EnvironmentFile=/home/ubuntu/ProTodo-App/backend/.env
-ExecStart=/home/ubuntu/ProTodo-App/backend/todo/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 wsgi:app
+ExecStart=/home/ubuntu/ProTodo-App/backend/protodo/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 wsgi:app
 
 [Install]
 WantedBy=multi-user.target

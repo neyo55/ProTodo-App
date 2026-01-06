@@ -73,11 +73,25 @@ jobs:
           # Fix permissions just in case
           chmod +x deployment/protodo.service
           
+          # --- YOUR FIX: Grant Nginx Permission to Read Files ---
+          echo "🔓 Fixing permissions for Nginx..."
+          # Allow 'others' (including Nginx) to enter these folders
+          chmod 755 /home/ubuntu
+          chmod 755 /home/ubuntu/ProTodo-App
+          chmod 755 /home/ubuntu/ProTodo-App/frontend
+          
           sudo cp deployment/protodo.service /etc/systemd/system/protodo.service
           sudo systemctl daemon-reload
           
           sudo cp deployment/nginx_protodo /etc/nginx/sites-available/protodo
-          # Link only if it doesn't exist yet
+
+          # 3. Disable Default Nginx Config (THE FIX)
+          if [ -f /etc/nginx/sites-enabled/default ]; then
+             sudo rm /etc/nginx/sites-enabled/default
+             echo "🗑️ Removed default Nginx config"
+          fi
+          
+          # 4. Enable ProTodo Config
           if [ ! -f /etc/nginx/sites-enabled/protodo ]; then
              sudo ln -s /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
           fi
