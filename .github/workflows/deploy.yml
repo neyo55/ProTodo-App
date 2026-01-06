@@ -25,26 +25,19 @@ jobs:
           if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
 
       - name: 🔍 Lint with Flake8 (Check Syntax)
-        # Stop the build if there are Python syntax errors or undefined names
         run: |
-          # E9,F63,F7,F82 = Syntax errors
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Warning for style (won't stop build, just warns)
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: 🛡️ Security Scan (Bandit)
-        # Checks for common security issues in Python code
-        run: |
-          bandit -r backend/ -ll -ii
+        run: bandit -r backend/ -ll -ii
 
       - name: 📦 Check Dependencies (Safety)
-        # Checks if installed packages have known security vulnerabilities
-        run: |
-          safety check
+        run: safety check
 
-  # JOB 2: Continuous Deployment (Only runs if Job 1 succeeds)
+  # JOB 2: Continuous Deployment
   deploy:
-    needs: build-and-test  # <--- This is the Gatekeeper
+    needs: build-and-test
     runs-on: ubuntu-latest
     
     steps:
@@ -59,31 +52,45 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         script: |
           set -e
-          set -o pipefail
           
           echo "🚀 Starting Deployment..."
           
-          # 1. Update Code
-          cd ~/ProTodo-App
-          git fetch origin main
-          git reset --hard origin/main
+          # === 1. SMART CLONE/UPDATE ===
+          # Check if the folder exists. If NOT, clone it.
+          if [ ! -d "/home/ubuntu/ProTodo-App" ]; then
+            echo "📂 Repo not found. Cloning for the first time..."
+            git clone https://github.com/neyo55/ProTodo-App.git /home/ubuntu/ProTodo-App
+            cd /home/ubuntu/ProTodo-App
+          else
+            echo "⬇️ Repo exists. Pulling latest changes..."
+            cd /home/ubuntu/ProTodo-App
+            git fetch origin main
+            git reset --hard origin/main
+          fi
 
-          # 2. Update Configurations
+          # === 2. Update Configurations ===
           echo "⚙️ Updating configurations..."
+          # Fix permissions just in case
+          chmod +x deployment/protodo.service
+          
           sudo cp deployment/protodo.service /etc/systemd/system/protodo.service
           sudo systemctl daemon-reload
+          
           sudo cp deployment/nginx_protodo /etc/nginx/sites-available/protodo
-          sudo ln -sf /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
+          # Link only if it doesn't exist yet
+          if [ ! -f /etc/nginx/sites-enabled/protodo ]; then
+             sudo ln -s /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
+          fi
           sudo nginx -t
 
-          # 3. Install Dependencies
+          # === 3. Install Dependencies ===
           echo "📦 Installing dependencies..."
           cd backend
-          if [ ! -d "todo" ]; then python3 -m venv todo; fi
-          source todo/bin/activate
+          if [ ! -d "protodo" ]; then python3 -m venv protodo; fi
+          source protodo/bin/activate
           pip install -r requirements.txt
 
-          # 4. Restart Services
+          # === 4. Restart Services ===
           echo "cw Restarting Application..."
           sudo systemctl restart protodo
           sudo systemctl reload nginx
@@ -95,7 +102,11 @@ jobs:
 
 
 
-# name: Deploy to AWS EC2
+
+
+
+
+# name: Production CI/CD Pipeline
 
 # on:
 #   push:
@@ -103,7 +114,45 @@ jobs:
 #       - main
 
 # jobs:
+#   # JOB 1: Continuous Integration (Security & Quality Checks)
+#   build-and-test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10'
+
+#       - name: Install Dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install flake8 bandit safety
+#           if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+
+#       - name: 🔍 Lint with Flake8 (Check Syntax)
+#         # Stop the build if there are Python syntax errors or undefined names
+#         run: |
+#           # E9,F63,F7,F82 = Syntax errors
+#           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+#           # Warning for style (won't stop build, just warns)
+#           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+#       - name: 🛡️ Security Scan (Bandit)
+#         # Checks for common security issues in Python code
+#         run: |
+#           bandit -r backend/ -ll -ii
+
+#       - name: 📦 Check Dependencies (Safety)
+#         # Checks if installed packages have known security vulnerabilities
+#         run: |
+#           safety check
+
+#   # JOB 2: Continuous Deployment (Only runs if Job 1 succeeds)
 #   deploy:
+#     needs: build-and-test  # <--- This is the Gatekeeper
 #     runs-on: ubuntu-latest
     
 #     steps:
@@ -117,48 +166,34 @@ jobs:
 #         username: ${{ secrets.EC2_USER }}
 #         key: ${{ secrets.EC2_KEY }}
 #         script: |
-#           # --- ERROR HANDLING ---
-#           # Exit immediately if a command exits with a non-zero status
 #           set -e
 #           set -o pipefail
-
+          
 #           echo "🚀 Starting Deployment..."
-
+          
 #           # 1. Update Code
-#           echo "⬇️ Pulling latest code..."
 #           cd ~/ProTodo-App
 #           git fetch origin main
-#           # Force sync: This ensures server matches GitHub exactly (safest for automated deploys)
-#           git reset --hard origin/main  
+#           git reset --hard origin/main
 
-#           # 2. Update Configurations (Idempotent: Always forces correct state)
+#           # 2. Update Configurations
 #           echo "⚙️ Updating configurations..."
-#           # Copy service file
 #           sudo cp deployment/protodo.service /etc/systemd/system/protodo.service
 #           sudo systemctl daemon-reload
-          
-#           # Copy Nginx file
 #           sudo cp deployment/nginx_protodo /etc/nginx/sites-available/protodo
-#           # Ensure symlink exists (force creation)
 #           sudo ln -sf /etc/nginx/sites-available/protodo /etc/nginx/sites-enabled/
-          
-#           # CRITICAL: Test Nginx config before reloading. 
-#           # If this fails, the script stops here, saving the site from crashing.
-#           echo "🧪 Testing Nginx config..."
 #           sudo nginx -t
 
 #           # 3. Install Dependencies
 #           echo "📦 Installing dependencies..."
 #           cd backend
-#           # Create venv if it somehow got deleted
 #           if [ ! -d "todo" ]; then python3 -m venv todo; fi
 #           source todo/bin/activate
-#           # Pip automatically skips installed packages (Efficient)
 #           pip install -r requirements.txt
 
 #           # 4. Restart Services
 #           echo "cw Restarting Application..."
 #           sudo systemctl restart protodo
 #           sudo systemctl reload nginx
-
-#           echo "✅ Deployment Complete!"
+          
+#           echo "✅ Production Deployment Complete!"
